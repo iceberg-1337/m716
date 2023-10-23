@@ -13,6 +13,7 @@ pip install -r requirements.txt
 2. run script with params:
 - `--flows`, number of flows
 - `--timer`, analyzer and generator operating time
-    ``` bash
-    python main.py --flows 1000 --timer 60
-    ```
+
+``` bash
+python main.py --flows 1000 --timer 60
+```
