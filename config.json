@@ -1,0 +1,35 @@
+{
+  "rpi": {
+    "user": "admin",
+    "password": "admin",
+    "address": "192.168.110.71",
+    "root": "admin"
+  },
+  "m716": {
+    "user": "admin",
+    "password": "PleaseChangeTheAdminPassword",
+    "address": "192.168.0.1",
+    "root": "PleaseChangeTheRootPassword"
+  },
+  "rpi_conf": {
+    "delay": 50,
+    "jitter": 20,
+    "loss": 10
+  },
+  "user": {
+    "user": "admin",
+    "password": "admin",
+    "address": "192.168.0.5",
+    "dir": "D:/M716"
+  },
+  "port_cfg": {
+    "pkt_size": "rnd",
+    "speed": 100000,
+    "macs": "rnd",
+    "macd": "rnd",
+    "ips": "rnd",
+    "ipd": "rnd",
+    "ups": "rnd",
+    "upd": "rnd"
+  }
+}
