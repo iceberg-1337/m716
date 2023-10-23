@@ -36,7 +36,7 @@ def raspberry():
     ssh_rpi = paramiko.SSHClient()
     ssh_rpi.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh_rpi.connect(rpi['address'], username=rpi['user'], password=rpi['password'])
-    commands = ['su', rpi['root'],
+    commands = ['su', rpi['root'], 'apt-get install bridge-utils', 'apt-get install iproute2',
                 f'tc qdisc replace dev eth1 root netem delay {rpi_conf["delay"]}ms {rpi_conf["jitter"]}ms loss'
                 f' {rpi_conf["loss"]}%',
                 'brctl addbr br0', 'brctl addif br0 eth0', 'brctl addif br0 eth1', 'ifconfig br0 up']
