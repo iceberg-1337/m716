@@ -17,10 +17,9 @@
     "loss": 10
   },
   "user": {
-    "user": "admin",
-    "password": "admin",
-    "address": "192.168.0.5",
-    "dir": "D:/M716"
+    "user": "icebe",
+    "password": "Iceberg_1337",
+    "address": "192.168.0.5"
   },
   "port_cfg": {
     "pkt_size": "rnd",
@@ -29,7 +28,6 @@
     "macd": "rnd",
     "ips": "rnd",
     "ipd": "rnd",
-    "ups": "rnd",
-    "upd": "rnd"
+    "ups": "rnd"
   }
 }
