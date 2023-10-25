@@ -17,8 +17,8 @@
     "loss": 10
   },
   "user": {
-    "user": "icebe",
-    "password": "Iceberg_1337",
+    "user": "admin",
+    "password": "admin",
     "address": "192.168.0.5"
   },
   "port_cfg": {
