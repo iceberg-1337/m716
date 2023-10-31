@@ -34,6 +34,7 @@ M716 = config['m716']
 rpi_conf = config['rpi_conf']
 user = config['user']
 port_cfg = config['port_cfg']
+total_speed = []
 
 
 def raspberry(flows, delays, jitters, losses):
@@ -78,7 +79,8 @@ def m716(flows, timer):
     with open('results/port1.ini', 'w') as file:
         for index in range(1, flows + 1):
             pkt_size = random.randint(128, 1500) if port_cfg['pkt_size'] == 'rnd' else port_cfg['pkt_size']
-            speed = random.randint(10000, 1000000) if port_cfg['speed'] == 'rnd' else port_cfg['speed']
+            speed = random.randint(150000, 1000000) if port_cfg['speed'] == 'rnd' else port_cfg['speed']
+            total_speed.append(speed)
             mac_s = f'00:22:ce:00:0{random.choice(mac_list)}:{random.choice(mac_list)}{random.choice(mac_list)}' if \
                 port_cfg['macs'] == 'rnd' else port_cfg['macs']
             mac_d = f'00:22:ce:2c:0{random.choice(mac_list)}:{random.choice(mac_list)}{random.choice(mac_list)}' if \
@@ -141,19 +143,18 @@ def results(flows, delays, jitters, losses):
     received_loss = []
     status = []
 
+    print(f'Итоговая скорость: {sum(total_speed) / 1000000} Мбит/с')
     if len(filtered_data_test) != flows:
         print('Количество потоков отличается от сгенерированных')
         missing_flow_ids = [flow_id for flow_id in range(1, flows+1) if flow_id not in flow_ids]
         print('Отсутсвующие потоки: ', missing_flow_ids)
-        success = False
     else:
         print('Количество потоков совпадает с генератором')
-        success = True
 
     for params in filtered_data_test:
         success = True
         flow = params['FlowId'] - 1
-        set_delay.append(delays[flow])
+        set_delay.append(delays[flow] + jitters[flow])
         received_delay.append(round(params['PrevLat']/1000, 1))
         if params['PrevLat'] > ((delays[flow] + jitters[flow] + 1.5) * 1000):
             print(f'в потоке {params["FlowId"]} задержка больше установленной, установленная {delays[flow] + jitters[flow]},'
