@@ -3,6 +3,7 @@ import random
 import time
 import csv
 import os
+from datetime import datetime
 
 
 import paramiko  # pip install paramiko
@@ -121,6 +122,9 @@ def get_results():
             time.sleep(5)
 
 
+status = []
+
+
 def results(flows, delays, jitters, losses):
     with open('results/gen.json', 'r') as file:
         data = json.load(file)
@@ -141,7 +145,6 @@ def results(flows, delays, jitters, losses):
     recieved_jitter = []
     set_loss = []
     received_loss = []
-    status = []
 
     print(f'Итоговая скорость: {sum(total_speed) / 1000000} Мбит/с')
     if len(filtered_data_test) != flows:
@@ -156,14 +159,14 @@ def results(flows, delays, jitters, losses):
         flow = params['FlowId'] - 1
         set_delay.append(delays[flow] + jitters[flow])
         received_delay.append(round(params['PrevLat']/1000, 1))
-        if params['PrevLat'] > ((delays[flow] + jitters[flow] + 1.5) * 1000):
+        if round(params['PrevLat']/1000, 1) > (delays[flow] + jitters[flow] + 1.1):
             print(f'в потоке {params["FlowId"]} задержка больше установленной, установленная {delays[flow] + jitters[flow]},'
                   f' полученная {params["PrevLat"]/1000}')
             success = False
         loss = round((params['PrevSeqNum'] - params['PktsCnt']) * 100 / params['PrevSeqNum'], 1)
         set_loss.append(losses[flow])
         received_loss.append(loss)
-        if loss > losses[flow] + 1.5:
+        if loss > losses[flow] + 1:
             print(f'в потоке {params["FlowId"]} процент потерь больше установленного, установленный {losses[flow]},'
                   f'полученный {loss}')
             success = False
@@ -174,10 +177,10 @@ def results(flows, delays, jitters, losses):
             mid_interval = (i + 0.5) * interval  # Середина интервала корзины
             total_jitter += value * mid_interval
             total_weight += value
-        average_jitter = round(total_jitter / total_weight, 1)
+        average_jitter = (round(total_jitter / total_weight, 1)) if total_weight != 0 else 0
         set_jitter.append(jitters[flow])
         recieved_jitter.append(average_jitter)
-        if average_jitter > jitters[flow] + 1.5:
+        if average_jitter > jitters[flow] + 1:
             print(f'в потоке {params["FlowId"]} джиттер больше установленного, установленный {jitters[flow]},'
                   f'полученный {average_jitter}')
             success = False
@@ -196,21 +199,47 @@ def results(flows, delays, jitters, losses):
                                  set_loss[i], received_loss[i], status[i]])
 
 
+def total_result(flows):
+    if 'FAILED' in status:
+        result = 'FAILED'
+    else:
+        result = 'OK'
+    if not os.path.isfile('total_results.csv'):
+        with open('total_results.csv', "w", encoding="UTF-8") as file:
+            file_writer = csv.writer(file, delimiter=";", lineterminator="\r")
+            headers = ["Flows", "speed", "packet size", "set delay", "set jitter",
+                       "set loss", "status"]
+            file_writer.writerow(headers)
+            file_writer = csv.writer(file, delimiter=";", lineterminator="\r")
+            file_writer.writerow([flows, sum(total_speed) / 1000000, port_cfg['pkt_size'], rpi_conf['delay'],
+                                  rpi_conf['jitter'], rpi_conf['loss'], result])
+    else:
+        with open('total_results.csv', "a", encoding="UTF-8") as file:
+            file_writer = csv.writer(file, delimiter=";", lineterminator="\r")
+            file_writer.writerow([flows, sum(total_speed) / 1000000, port_cfg['pkt_size'], rpi_conf['delay'],
+                                  rpi_conf['jitter'], rpi_conf['loss'], result])
+
+
 @click.command()
 @click.option('--flows', type=click.IntRange(1, 1000), required=True, help='Number of flows')
 @click.option('--timer', type=click.INT, required=True, help='time for test')
 def main(flows, timer):
+    start = datetime.now()
+    print(start)
     delays = [random.randint(rpi_conf['jitter'], rpi_conf['delay']) for _ in range(flows)]
     jitters = [random.randint(0, rpi_conf['jitter']) for _ in range(flows)]
-    losses = [random.randint(0, rpi_conf['loss']) for _ in range(flows)]
+    losses = [round(random.uniform(0, rpi_conf['loss']), 1) for _ in range(flows)]
     with Halo(text='Настройка Raspberry', spinner='moon'):
         raspberry(flows, delays, jitters, losses)
     with Halo(text='Настройка M716', spinner='moon'):
         m716(flows, timer)
     with Halo(text='Получение результатов', spinner='moon'):
         get_results()
-
     results(flows, delays, jitters, losses)
+    total_result(flows)
+
+    stop = datetime.now()
+    print(stop)
 
 
 if __name__ == "__main__":
